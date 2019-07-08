@@ -16,15 +16,20 @@ import android.os.ParcelUuid;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener
+public class MainActivity extends AppCompatActivity
 {
+    String uuid  = new String("65432461-1EFE-4ADB-BC7E-9F7F8E27FDC1");
+
     BluetoothLeAdvertiser advertiser;
     AdvertiseSettings settings;
-    AdvertiseData advertiseData;
+    public AdvertiseData advertiseData;
+    //AdvertiseData.Builder dataBuilder = new AdvertiseData.Builder();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,7 +39,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         BluetoothManager manager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         BluetoothAdapter adapter = manager.getAdapter();
-        BluetoothLeAdvertiser advertiser = adapter.getBluetoothLeAdvertiser();
+        advertiser = adapter.getBluetoothLeAdvertiser();
 
         // 設定
         AdvertiseSettings.Builder settingBuilder = new AdvertiseSettings.Builder();
@@ -42,14 +47,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         settingBuilder.setConnectable(false);//アドバタイジングの種類を接続か非接続か選択
         settingBuilder.setTimeout(0);
         settingBuilder.setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_LOW);
-        AdvertiseSettings settings = settingBuilder.build();
+        settings = settingBuilder.build();
 
-        // アドバタイジングデータ
-        // dataBuilder に一旦全部設定
+        //** dataBuilder に設定するものを用意↓↓↓
         AdvertiseData.Builder dataBuilder = new AdvertiseData.Builder();
-        dataBuilder.addServiceUuid(new ParcelUuid(UUID.fromString("65432461-1EFE-4ADB-BC7E-9F7F8E27FDC1")));
 
-        /**manuspecificdata**/
+        // 1 アドバタイジングデータ
+        ParcelUuid mUUID = new ParcelUuid(UUID.fromString(uuid));
+        dataBuilder.addServiceUuid(mUUID);
+
+        //2 ManufacturerSpecificDdata
         byte[] bytearray = new byte[16];
         bytearray[0] = 23;
         bytearray[13] = 13;
@@ -58,10 +65,15 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         dataBuilder.setIncludeDeviceName(true);
        // dataBuilder.addServiceData(new ParcelUuid(UUID.fromString("65")),bytearray); //←なぜか動かなくなってしまう
 
-        // dataBuilderをAdvertiseDataに格納
-        AdvertiseData advertiseData = dataBuilder.build();
+        //** dataBuilderをAdvertiseDataに格納
+        advertiseData = dataBuilder.build();
 
-        System.out.println("hoge1"+advertiseData);
+        System.out.println("Oncreate      hoge1"+advertiseData);
+
+        /*画面に表示*/
+        ((TextView) findViewById(R.id.uuid)).setText( mUUID.toString() );
+        ((EditText) findViewById(R.id.manudata)).setText( advertiseData.getManufacturerSpecificData().toString() );
+        /*画面に表示*/
 
 
         //アドバタイズを開始
@@ -70,21 +82,18 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             public void onStartSuccess(AdvertiseSettings settingsInEffect) {
                 super.onStartSuccess(settingsInEffect);
             }
-
             @Override
             public void onStartFailure(int errorCode) {
                 super.onStartFailure(errorCode);
             }
-
         });
 
     }
 
     // リストビューのアイテムクリック時の処理
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id )
+    public void onButtonClick(View view )
     {
-        System.out.println("hoge3"+advertiseData.getManufacturerSpecificData());
+        System.out.println("onButtonClick hoge3"+advertiseData);
 
         // クリックされたら
         //アドバタイズを開始
@@ -93,12 +102,33 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             public void onStartSuccess(AdvertiseSettings settingsInEffect) {
                 super.onStartSuccess(settingsInEffect);
             }
-
             @Override
             public void onStartFailure(int errorCode) {
                 super.onStartFailure(errorCode);
             }
         });
     }
+
+
+//    // リストビューのアイテムクリック時の処理
+//    @Override
+//    public void onItemClick(AdapterView<?> parent, View view, int position, long id )
+//    {
+//        System.out.println("onItemClick hoge3"+advertiseData.getManufacturerSpecificData());
+//
+//        // クリックされたら
+//        //アドバタイズを開始
+//        advertiser.startAdvertising(settings, advertiseData, new AdvertiseCallback() {
+//            @Override
+//            public void onStartSuccess(AdvertiseSettings settingsInEffect) {
+//                super.onStartSuccess(settingsInEffect);
+//            }
+//
+//            @Override
+//            public void onStartFailure(int errorCode) {
+//                super.onStartFailure(errorCode);
+//            }
+//        });
+//    }
 
 }
